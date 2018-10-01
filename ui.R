@@ -1,5 +1,6 @@
 library(shiny)
 library(ggplot2)
+library(shinyjqui)
 
 
 fluidPage(
@@ -28,6 +29,6 @@ fluidPage(
   ),
   
   mainPanel(
-    plotOutput('killsPlot', height="800px")
+    jqui_resizable(plotOutput('killsPlot'))
   )
 )
