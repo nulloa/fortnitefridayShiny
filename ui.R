@@ -1,7 +1,12 @@
 library(shiny)
-library(ggplot2)
+library(googlesheets4)
 library(shinyjqui)
 
+
+gs4_deauth()
+url_data <- read_sheet("https://docs.google.com/spreadsheets/d/14DQFoUMEDOaiDwJbfivyRSpJ2rijGwO-wHohUgCWDIk/edit?usp=sharing")
+data <- url_data %>% data.frame()
+possible_dates <- unique(data$`Tourny_Date`)
 
 fluidPage(
   
@@ -9,7 +14,12 @@ fluidPage(
   
   sidebarPanel(
     width=2,
-    uiOutput("select_tourny_date"),
+    
+    selectInput("select_tourny_date",
+                label="Tournament Date",
+                choices = possible_dates,
+                selected = tail(possible_dates, n=1),
+                width="180px"),
     
     selectInput("plot_choice",
                 label = "Plot View",

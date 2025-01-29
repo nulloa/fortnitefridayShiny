@@ -1,12 +1,14 @@
 library(shiny)
-library(googlesheets)
+library(googlesheets4)
 library(gridExtra)
 library(ggplot2)
 library(dplyr)
+library(scales)
 
 
-url_data <- gs_url("https://docs.google.com/spreadsheets/d/14DQFoUMEDOaiDwJbfivyRSpJ2rijGwO-wHohUgCWDIk/edit?usp=sharing")
-data <- url_data %>% gs_read(ws = "Sheet1") %>% data.frame
+gs4_deauth()
+url_data <- read_sheet("https://docs.google.com/spreadsheets/d/14DQFoUMEDOaiDwJbfivyRSpJ2rijGwO-wHohUgCWDIk/edit?usp=sharing")
+data <- url_data %>% data.frame() %>% mutate(Tourny_Date =  as.character(Tourny_Date))
 
 # Clean variable names
 names(data) <- gsub("_", " ", names(data))
@@ -15,6 +17,7 @@ player_data <- reshape2::melt(data[,1:9],
                               variable.name="Player",
                               value.name="No. Kills",
                               id.vars=c("Tourny Date","Team", "Game"))
+
 player_data$Player <- as.character(sapply(as.character(player_data$Player), function(y) paste(unlist(strsplit(y, " "))[[1]][1], collapse = " ")))
 player_data <- player_data[complete.cases(player_data),]
 
@@ -27,36 +30,30 @@ team_data <- team_data[complete.cases(team_data),]
 possible_dates <- unique(data$`Tourny Date`)
 
 function(input, output) {
-  # Output dates based on whats in the data
-  output$select_tourny_date <- renderUI({
-    selectInput("select_tourny_date",
-                label="Tournament Date",
-                choices = possible_dates,
-                selected = tail(possible_dates, n=1),
-                width="180px")
-  })
   
   #add reactive data information
   player_dataset <- reactive({
-    unique(subset(player_data,`Tourny Date`==(as.character(input$select_tourny_date))))
+    unique(subset(player_data,`Tourny Date`==input$select_tourny_date))
   })
   
   team_dataset <- reactive({
-    unique(subset(team_data, variable==input$select_team_kills & `Tourny Date`==(as.character(input$select_tourny_date))))
+    unique(subset(team_data, variable==input$select_team_kills & `Tourny Date`==input$select_tourny_date))
   })
   
   output$killsPlot <- renderPlot({
     
     # build graph with ggplot syntax
     player_plot <- ggplot(data=player_dataset(), aes(x=Game, y=`No. Kills`, color=Team, shape=Player)) +
-      geom_point() + 
+      geom_point(size=4) + 
       labs(title="Player Kills") +
-      theme_bw()
+      theme_bw() + 
+      scale_y_continuous(breaks = scales::breaks_extended(Q = c(1, 5, 2, 4, 3)))
     
     team_plot <- ggplot(data=team_dataset(), aes(x=Game, y=`No. Kills`, color=Team, shape=`Victory Royale`)) +
-      geom_point() +
+      geom_point(size=4) +
       labs(title="Team Kills") +
-      theme_bw()
+      theme_bw() + 
+      scale_y_continuous(breaks = scales::breaks_extended(Q = c(1, 5, 2, 4, 3)))
     
     # Add facets
     if(input$team_facet){
