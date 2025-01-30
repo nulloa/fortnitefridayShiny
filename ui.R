@@ -35,7 +35,12 @@ fluidPage(
                 choices = list("Game Kills"="Game Kills", "Total Kills"="Total Kills"),
                 selected="Game Kills",
                 width="180px"),
-    helpText("'Game Kills' shows the kills by a team in the game not including the bonus for victory royales.")
+    helpText("'Game Kills' shows the kills by a team in the game not including the bonus for victory royales."),
+    tags$footer(
+      "See the code on my github ",
+      tags$a(icon("github"), href="https://github.com/nulloa/fortnitefridayShiny")
+      
+      )
   ),
   
   mainPanel(
